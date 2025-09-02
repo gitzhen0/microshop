@@ -44,3 +44,5 @@ curl -s http://localhost:8080/api/orders | jq
 	•	✅ Read：GET /api/inventory、GET /api/inventory/{sku}
 	•	✅ Update：POST /api/inventory/{sku}（{"delta": n} 增量调整）
 	•	⛔ Delete：暂无（可加 DELETE /api/inventory/{sku}）
+
+### trigger cicd on
