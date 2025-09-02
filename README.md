@@ -27,3 +27,20 @@ curl -s -X POST http://localhost:8080/api/inventory/SKU-1 -H 'Content-Type: appl
 curl -s -X POST http://localhost:8080/api/orders -H 'Content-Type: application/json' -d '{"sku":"SKU-1","qty":2}' | jq
 curl -s http://localhost:8080/api/orders | jq
 ```
+
+### API
+	•	Users
+	•	✅ Create：POST /api/users
+	•	✅ Read：GET /api/users、GET /api/users/{id}
+	•	⛔ Update：暂无（可加 PUT/PATCH /api/users/{id}）
+	•	⛔ Delete：暂无（可加 DELETE /api/users/{id}）
+	•	Orders
+	•	✅ Create：POST /api/orders
+	•	✅ Read：GET /api/orders、GET /api/orders/{id}
+	•	⛔ Update：暂无（通常订单不允许任意更新；可加“取消”动作）
+	•	⛔ Delete：暂无（一般不物理删，改状态）
+	•	Inventory
+	•	✅ Create：隐式（对不存在的 SKU 调 POST /api/inventory/{sku} 会创建）
+	•	✅ Read：GET /api/inventory、GET /api/inventory/{sku}
+	•	✅ Update：POST /api/inventory/{sku}（{"delta": n} 增量调整）
+	•	⛔ Delete：暂无（可加 DELETE /api/inventory/{sku}）

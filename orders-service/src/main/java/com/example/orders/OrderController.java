@@ -7,20 +7,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/orders") // 只写路径，不要在类级别写 method/consumes/produces
 public class OrderController {
     private final OrderRepository repo;
     public OrderController(OrderRepository repo) { this.repo = repo; }
 
     public record CreateOrder(@NotBlank String sku, @Min(1) int qty) {}
 
-    @PostMapping
-    public Order create(@RequestBody CreateOrder req) {
-        return repo.save(new Order(req.sku(), req.qty()));
-    }
-
     @GetMapping
     public List<Order> list() { return repo.findAll(); }
+
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public Order create(@RequestBody CreateOrder req) { return repo.save(new Order(req.sku(), req.qty())); }
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> get(@PathVariable Long id) {
