@@ -1,12 +1,10 @@
-server:
-  port: 8083
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/shopdb
     username: shop
     password: shop123
   jpa:
-    hibernate.ddl-auto: update
+    hibernate.ddl-auto: update   # 开发期自动建表
     show-sql: true
     properties:
       hibernate.format_sql: true

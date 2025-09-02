@@ -1,22 +1,33 @@
 package com.example.inventory;
+
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
 
-@RestController @RequestMapping("/inventory")
+import java.util.Map;
+
+@RestController
+@RequestMapping("/inventory")
 public class InventoryController {
-    private final Map<String,Integer> stock = Collections.synchronizedMap(new LinkedHashMap<>());
-    public InventoryController() {
-        stock.put("SKU-1", 100); stock.put("SKU-2", 50);
+    private final InventoryRepository repo;
+
+    public InventoryController(InventoryRepository repo) { this.repo = repo; }
+
+    record Update(int delta) {}
+
+    @GetMapping("/{sku}")
+    public ResponseEntity<Map<String,Object>> get(@PathVariable String sku){
+        return repo.findBySku(sku)
+                .map(i -> ResponseEntity.ok(Map.of("sku", i.getSku(), "stock", i.getStock())))
+                .orElse(ResponseEntity.notFound().build());
     }
-    @GetMapping("/{sku}") public ResponseEntity<Map<String,Object>> get(@PathVariable String sku){
-        Integer s = stock.get(sku);
-        return s==null ? ResponseEntity.notFound().build()
-                : ResponseEntity.ok(Map.of("sku", sku, "stock", s));
-    }
-    record Update(int delta){}
-    @PostMapping("/{sku}") public Map<String,Object> add(@PathVariable String sku, @RequestBody Update u){
-        stock.put(sku, stock.getOrDefault(sku,0)+u.delta());
-        return Map.of("sku", sku, "stock", stock.get(sku));
+
+    @PostMapping("/{sku}")
+    @Transactional
+    public Map<String,Object> add(@PathVariable String sku, @RequestBody Update u){
+        var inv = repo.findBySku(sku).orElseGet(() -> new Inventory(sku, 0));
+        inv.setStock(inv.getStock() + u.delta());
+        repo.save(inv);
+        return Map.of("sku", inv.getSku(), "stock", inv.getStock());
     }
 }

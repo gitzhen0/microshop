@@ -1,2 +1,13 @@
-server.port: 8082
+server:
+  port: 8082
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopdb
+    username: shop
+    password: shop123
+  jpa:
+    hibernate.ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
 management.endpoints.web.exposure.include: health,info
