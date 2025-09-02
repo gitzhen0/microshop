@@ -15,10 +15,16 @@ public class InventoryController {
 
     record Update(int delta) {}
 
+//    @GetMapping("/{sku}")
+//    public ResponseEntity<Map<String,Object>> get(@PathVariable String sku){
+//        return repo.findBySku(sku)
+//                .map(i -> ResponseEntity.ok(Map.of("sku", i.getSku(), "stock", i.getStock())))
+//                .orElse(ResponseEntity.notFound().build());
+//    }
     @GetMapping("/{sku}")
-    public ResponseEntity<Map<String,Object>> get(@PathVariable String sku){
+    public ResponseEntity<Inventory> get(@PathVariable String sku){
         return repo.findBySku(sku)
-                .map(i -> ResponseEntity.ok(Map.of("sku", i.getSku(), "stock", i.getStock())))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
