@@ -45,4 +45,4 @@ curl -s http://localhost:8080/api/orders | jq
 	•	✅ Update：POST /api/inventory/{sku}（{"delta": n} 增量调整）
 	•	⛔ Delete：暂无（可加 DELETE /api/inventory/{sku}）
 
-### trigger cicd off
+### trigger cicd on
