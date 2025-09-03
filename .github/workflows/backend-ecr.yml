@@ -1,0 +1,80 @@
+name: backend-ecr
+on:
+  push:
+    branches: [ "main" ]  # 需与 backend_github_branch 保持一致
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write   # OIDC
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.BACKEND_AWS_REGION }}
+  SERVICES: "api-gateway users-service orders-service inventory-service"
+  ECR_PREFIX: "microshop"   # 与 backend_ecr_repo_prefix 保持一致
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.BACKEND_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set vars
+        id: vars
+        run: |
+          echo "sha7=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Build & Push all services
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          TAG=${{ steps.vars.outputs.sha7 }}
+          LATEST_TAG="${{ steps.vars.outputs.branch }}-latest"
+
+          declare -A MANIFEST
+          for SVC in $SERVICES; do
+            REPO="$ECR_PREFIX/$SVC"
+            URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO"
+            echo ">>> Building $SVC -> $URI:$TAG"
+
+            docker build \
+              --build-arg MODULE=$SVC \
+              -t $URI:$TAG \
+              -t $URI:$LATEST_TAG \
+              .
+
+            docker push $URI:$TAG
+            docker push $URI:$LATEST_TAG
+
+            MANIFEST[$SVC]="$URI:$TAG"
+          done
+
+          # 输出 images.json（给后续 Argo/Helm 用）
+          {
+            echo '{'
+            first=1
+            for k in "${!MANIFEST[@]}"; do
+              [[ $first -eq 1 ]] || echo ','
+              printf '  "%s": "%s"' "$k" "${MANIFEST[$k]}"
+              first=0
+            done
+            echo
+            echo '}'
+          } > images.json
+
+      - name: Upload images.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: images.json
