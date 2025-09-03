@@ -1,7 +1,7 @@
 name: backend-ecr
 on:
   push:
-    branches: [ "main" ]  # 需与 backend_github_branch 保持一致
+    branches: [ "master" ]  # 需与 backend_github_branch 保持一致
   workflow_dispatch: {}
 
 permissions:
